@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Your Cannabinoid · Mood</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #ffffff;
+    color: #1B3A2F;
+  }
+ 
+  .widget {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 32px 24px 28px;
+  }
+ 
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+ 
+  .logo {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    color: #1B3A2F;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+ 
+  h2 {
+    font-size: clamp(20px, 4vw, 26px);
+    font-weight: 700;
+    color: #1B3A2F;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+ 
+  .sub {
+    font-size: 14px;
+    color: #5a7a6a;
+    line-height: 1.5;
+  }
+ 
+  /* Mood chips */
+  .moods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+ 
+  .chip {
+    background: #EDF4F0;
+    border: 2px solid transparent;
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1B3A2F;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+    line-height: 1;
+  }
+ 
+  .chip:hover {
+    background: #d8ede3;
+    transform: translateY(-1px);
+  }
+ 
+  .chip.active {
+    background: #1B3A2F;
+    color: #ffffff;
+    border-color: #1B3A2F;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(27,58,47,0.22);
+  }
+ 
+  /* Result card */
+  .result-wrap {
+    min-height: 148px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+ 
+  .result {
+    width: 100%;
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.28s ease, transform 0.28s ease;
+    pointer-events: none;
+  }
+ 
+  .result.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+ 
+  .badge {
+    flex-shrink: 0;
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+ 
+  .result-body { flex: 1; }
+ 
+  .result-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1B3A2F;
+    margin-bottom: 3px;
+  }
+ 
+  .result-full {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7a9e8a;
+    margin-bottom: 8px;
+  }
+ 
+  .result-desc {
+    font-size: 14px;
+    color: #3d5a4a;
+    line-height: 1.55;
+  }
+ 
+  .result-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    color: #1B3A2F;
+  }
+ 
+  .placeholder-msg {
+    text-align: center;
+    color: #a0b8a8;
+    font-size: 14px;
+    font-style: italic;
+    width: 100%;
+  }
+ 
+  .divider {
+    height: 1px;
+    background: #e8f0eb;
+    margin: 20px 0;
+  }
+ 
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: #9ab5a4;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+ 
+<div class="widget">
+  <div class="header">
+    <div class="logo">mood</div>
+    <h2>How do you want to feel?</h2>
+    <p class="sub">Pick a mood and find your match.</p>
+  </div>
+ 
+  <div class="moods" id="moods"></div>
+ 
+  <div class="result-wrap">
+    <p class="placeholder-msg" id="placeholder">← tap a mood above to get started</p>
+    <div class="result" id="result">
+      <div class="badge" id="result-badge"></div>
+      <div class="result-body">
+        <div class="result-name" id="result-name"></div>
+        <div class="result-full" id="result-full"></div>
+        <div class="result-desc" id="result-desc"></div>
+        <span class="result-tag" id="result-tag"></span>
+      </div>
+    </div>
+  </div>
+ 
+  <div class="divider"></div>
+  <p class="footer">Effects vary by individual. Explore all cannabinoids at <strong>mood.com</strong></p>
+</div>
+ 
+<script>
+  var data = [
+    {
+      mood: "😌 Relaxed",
+      name: "CBD",
+      full: "Cannabidiol",
+      desc: "CBD is the go-to for unwinding without the high. Perfect for a slow evening on the couch — calm, clear, and totally chill.",
+      tag: "Non-psychoactive",
+      bg: "#E8D8F0",
+      badgeBg: "#d0b8e8",
+      badgeColor: "#3d2060"
+    },
+    {
+      mood: "😴 Sleepy",
+      name: "CBN",
+      full: "Cannabinol",
+      desc: "CBN is your PM best friend. It's deeply calming and often found in sleep-focused products — great when you need to genuinely switch off.",
+      tag: "Best for PM use",
+      bg: "#DDE8F5",
+      badgeBg: "#b8cce8",
+      badgeColor: "#1a3060"
+    },
+    {
+      mood: "😄 Euphoric",
+      name: "THC",
+      full: "Tetrahydrocannabinol",
+      desc: "THC is the classic. Whether you go Delta-8 for a gentler ride or Delta-9 for the full experience, expect a real mood lift and a dose of the munchies.",
+      tag: "Psychoactive",
+      bg: "#F5E8E8",
+      badgeBg: "#e8c4c4",
+      badgeColor: "#5c1a1a"
+    },
+    {
+      mood: "⚡ Energized",
+      name: "THCV",
+      full: "Tetrahydrocannabivarin",
+      desc: "Called 'diet weed' for a reason — THCV brings mild psychoactive effects with an uplifting, focused energy rather than couch-lock.",
+      tag: "Mild psychoactive",
+      bg: "#E8F5E8",
+      badgeBg: "#c4e8c8",
+      badgeColor: "#1a5c22"
+    },
+    {
+      mood: "🌙 Wind Down",
+      name: "CBC",
+      full: "Cannabichromene",
+      desc: "CBC is quietly powerful — a non-psychoactive cannabinoid that eases your body and mind into evening mode, with a gentle mood lift along the way.",
+      tag: "Best for evenings",
+      bg: "#EDF4F0",
+      badgeBg: "#c4ddd0",
+      badgeColor: "#1B3A2F"
+    },
+    {
+      mood: "🧘 Grounded",
+      name: "CBG",
+      full: "Cannabigerol",
+      desc: "The 'mother of all cannabinoids.' CBG gently eases tension without any psychoactive effects — a subtle, steady sense of calm.",
+      tag: "Non-psychoactive",
+      bg: "#F0F5E8",
+      badgeBg: "#d0e0b8",
+      badgeColor: "#3a5010"
+    }
+  ];
+ 
+  var moodsEl   = document.getElementById('moods');
+  var resultEl  = document.getElementById('result');
+  var placeholderEl = document.getElementById('placeholder');
+  var activeChip = null;
+ 
+  data.forEach(function(item, i) {
+    var chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = item.mood;
+    chip.setAttribute('aria-pressed', 'false');
+ 
+    chip.addEventListener('click', function() {
+      if (activeChip) {
+        activeChip.classList.remove('active');
+        activeChip.setAttribute('aria-pressed', 'false');
+      }
+      if (activeChip === chip) {
+        activeChip = null;
+        resultEl.classList.remove('visible');
+        placeholderEl.style.display = '';
+        return;
+      }
+      chip.classList.add('active');
+      chip.setAttribute('aria-pressed', 'true');
+      activeChip = chip;
+ 
+      placeholderEl.style.display = 'none';
+      resultEl.classList.remove('visible');
+ 
+      // slight delay for the re-animate
+      setTimeout(function() {
+        resultEl.style.background = item.bg;
+        document.getElementById('result-badge').style.background  = item.badgeBg;
+        document.getElementById('result-badge').style.color       = item.badgeColor;
+        document.getElementById('result-badge').textContent       = item.name;
+        document.getElementById('result-name').textContent        = item.name;
+        document.getElementById('result-full').textContent        = item.full;
+        document.getElementById('result-desc').textContent        = item.desc;
+        document.getElementById('result-tag').textContent         = item.tag;
+        document.getElementById('result-tag').style.background    = item.badgeBg;
+        document.getElementById('result-tag').style.color         = item.badgeColor;
+        resultEl.classList.add('visible');
+      }, 60);
+    });
+ 
+    moodsEl.appendChild(chip);
+  });
+</script>
+</body>
+</html>
